@@ -39,6 +39,7 @@
 
     <controls
       v-if="anime && episode"
+      ref="controls"
       :episode="episode"
       :nextEpisode="nextEpisode"
       :anime="anime"
@@ -211,6 +212,7 @@ export default class Player extends Vue {
 
   public $refs!: {
     player: HTMLVideoElement
+    controls: Controls
   }
 
   public get isPlayerMaximized() {
@@ -229,6 +231,8 @@ export default class Player extends Vue {
       [KeybindingAction.VOLUME_UP]: () => this.increaseVolume(10),
       [KeybindingAction.TOGGLE_MUTED]: () => this.onToggleMute(),
       [KeybindingAction.TOGGLE_FULLSCREEN]: () => this.toggleFullscreen(),
+      [KeybindingAction.FRAME_FORWARD]: () => this.pauseAndTraverseFrames(1),
+      [KeybindingAction.FRAME_BACK]: () => this.pauseAndTraverseFrames(-1),
     }
   }
 
@@ -284,7 +288,6 @@ export default class Player extends Vue {
     if (this.$route.path === '/player-big') {
       this.$router.back()
     }
-
   }
 
   private async fetchStream(
@@ -492,7 +495,9 @@ export default class Player extends Vue {
   public onSetTime(value: number) {
     this.lastHeartbeat = this.progressInSeconds - 30
 
-    this.setDiscordState('watching')
+    if (!this.paused) {
+      this.setDiscordState('watching')
+    }
 
     this.$refs.player.currentTime = value
   }
@@ -550,6 +555,7 @@ export default class Player extends Vue {
   public pause() {
     if (this.paused) return
 
+    (this.$refs.controls as any).goVisible()
     this.$refs.player.pause()
   }
 
@@ -593,6 +599,13 @@ export default class Player extends Vue {
     }
 
     this.setProgress(this.episode.episodeNumber)
+  }
+
+  private pauseAndTraverseFrames(frames: number) {
+    this.pause()
+
+    // We assume framerate to be 24 since there's no way to get it from the player :(
+    this.skipBySeconds(frames / 24)
   }
 
   private setDiscordState(state: 'watching' | 'paused') {

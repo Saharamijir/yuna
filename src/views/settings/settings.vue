@@ -250,7 +250,6 @@
           <login-h-d
             v-if="currentWindow === Window.Hidive"
             :onFinished="() => setCurrentWindow(null)"
-            disabled
           />
         </div>
       </transition>
@@ -531,6 +530,10 @@ export default class Settings extends Vue {
         return 'Decrease volume'
       case KeybindingAction.VOLUME_UP:
         return 'Increase volume'
+      case KeybindingAction.FRAME_FORWARD:
+        return 'Skip forwards 1 frame'
+      case KeybindingAction.FRAME_BACK:
+        return 'Skip backwards 1 frame'
       default:
         return action
     }
